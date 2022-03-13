@@ -1,0 +1,17 @@
+Third Party Licenses
+
+This page lists the licenses of the projects used in c9s.
+
+{{#each licenses}}
+########################################################################################################################
+## {{name}}
+########################################################################################################################
+
+Used by:
+{{#each used_by}}
+* {{#if crate.repository}} {{crate.repository}} {{else}} https://crates.io/crates/{{crate.name}} {{/if}}- {{crate.name}} {{crate.version}}
+{{/each}}
+
+{{{text}}}
+
+{{/each}}

@@ -1,0 +1,15 @@
+[package]
+name = "wsl-gpg-agent"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["full"]}
+tokio-util = { version = "0.7.0", features = ["codec"]}
+futures = "0.3.21"
+anyhow = "1.0.56"
+dirs = "4.0.0"
+clap = { version = "3.1.6", features = ["derive"] }

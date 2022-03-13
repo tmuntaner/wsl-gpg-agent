@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release-windows:
+    name: Release for Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: |
+          cargo install --locked cargo-about
+          cargo about generate about.txt.hbs --output-file license.txt
+
+      - name: Build
+        run: |
+          cargo build --all --release
+          cd target\release
+          $sum = (CertUtil -hashFile .\wsl-gpg-agent.exe SHA256)[1] -replace " ",""
+          "$sum wsl-gpg-agent.exe" | Out-File .\wsl-gpg-agent.exe.SHA256SUM
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/release/wsl-gpg-agent.exe
+            target/release/wsl-gpg-agent.exe.SHA256SUM
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
