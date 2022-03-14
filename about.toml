@@ -1,5 +1,21 @@
 accepted = [
     "Apache-2.0",
+    "BSD-3-Clause",
+    "ISC",
+    "CC0-1.0",
     "MIT",
     "MPL-2.0"
 ]
+
+[widestring.clarify]
+license = "MIT OR Apache-2.0"
+
+[[widestring.clarify.files]]
+path = "LICENSES/MIT.txt"
+license = "MIT"
+checksum = "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+
+[[widestring.clarify.files]]
+path = "LICENSES/Apache-2.0.txt"
+license = "Apache-2.0"
+checksum = "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"

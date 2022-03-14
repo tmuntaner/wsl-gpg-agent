@@ -18,7 +18,7 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - run: cargo install --locked cargo-about && cargo about generate about.txt.hbs > license.txt
+      - run: cargo install --locked cargo-about && cargo about generate about.txt.hbs | Set-Content -Encoding UTF8 .\license.txt
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
