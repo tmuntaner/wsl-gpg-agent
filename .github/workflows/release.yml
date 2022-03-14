@@ -22,7 +22,7 @@ jobs:
 
       - run: |
           cargo install --locked cargo-about
-          cargo about generate about.txt.hbs --output-file license.txt
+          cargo about generate about.txt.hbs | Set-Content -Encoding UTF8 .\license.txt
 
       - name: Build
         run: |
