@@ -18,7 +18,7 @@ log = "0.4"
 widestring = "0.5"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "^0.33"
+version = "^0.34"
 features = [
     "Win32_Foundation",
     "Win32_System_Memory",
