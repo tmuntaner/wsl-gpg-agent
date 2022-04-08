@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use std::ffi::{c_void, CString};
-use std::io::{Read, Stdin, Stdout, Write};
+use std::io::{Read, Stdin};
 use std::os::raw::c_ulong;
 use std::process::Command;
 use std::{io, process, slice};
@@ -26,7 +26,7 @@ impl Ssh {
         log::info!("start");
 
         let stdin = io::stdin();
-        let stdout = io::stdout();
+        let mut stdout = io::stdout();
 
         loop {
             let request = self.read_request(&stdin)?;
@@ -39,7 +39,7 @@ impl Ssh {
                 self.map_file_of_view(file_mapping, request)?;
             self.send_message(&hwnd, &map_name)?;
 
-            self.send_result(&stdout, shared_memory_slice)?;
+            self.send_result(&mut stdout, shared_memory_slice)?;
 
             unsafe {
                 UnmapViewOfFile(shared_memory);
@@ -79,7 +79,8 @@ impl Ssh {
         unsafe {
             hwnd = FindWindowW(pageant_window_name, pageant_window_name);
         }
-        if hwnd.is_invalid() {
+
+        if hwnd.0 == 0 {
             log::info!("pageant window not found. launching");
             let connect_command = Command::new("gpg-connect-agent")
                 .args(["/bye"])
@@ -91,7 +92,8 @@ impl Ssh {
         unsafe {
             hwnd = FindWindowW(pageant_window_name, pageant_window_name);
         }
-        if hwnd.is_invalid() {
+
+        if hwnd.0 == 0 {
             log::info!("hwnd not found");
             bail!("could not find pageant window");
         }
@@ -106,12 +108,10 @@ impl Ssh {
         file_mapping: HANDLE,
         request: Vec<u8>,
     ) -> Result<(*mut c_void, &mut [u8])> {
-        log::info!("creating map view of file");
         let shared_memory;
         unsafe {
             shared_memory = MapViewOfFile(file_mapping, FILE_MAP_ALL_ACCESS, 0u32, 0u32, 0_usize);
         }
-        log::info!("created map view of file");
 
         let shared_memory_slice;
         unsafe {
@@ -141,11 +141,10 @@ impl Ssh {
         unsafe {
             result = SendMessageW(hwnd, WM_COPYDATA, WPARAM(0_usize), lparam);
         }
-        if result.is_invalid() {
+        if result.0 == 0 {
             log::info!("could not send data");
             bail!("could not send data");
         }
-        log::info!("sent message");
 
         unsafe {
             // after calling Box::into_raw, we're responsible for cleaning up.
@@ -155,7 +154,11 @@ impl Ssh {
         Ok(())
     }
 
-    fn send_result(&self, stdout: &Stdout, shared_memory_slice: &mut [u8]) -> Result<()> {
+    fn send_result(
+        &self,
+        stdout: &mut dyn io::Write,
+        shared_memory_slice: &mut [u8],
+    ) -> Result<()> {
         let length_buffer: [u8; 4] = [
             shared_memory_slice[0],
             shared_memory_slice[1],
@@ -163,17 +166,14 @@ impl Ssh {
             shared_memory_slice[3],
         ];
         let length = u32::from_be_bytes(length_buffer);
-        log::info!("length: {}", length);
 
         let mut result = vec![0u8; (length + 4) as usize];
         for i in 0..(length + 4) {
             result[i as usize] = shared_memory_slice[i as usize];
         }
-        log::info!("results: {:x?}", result);
 
-        let mut stdout_handle = stdout.lock();
-        stdout_handle.write_all(result.as_slice())?;
-        stdout_handle.flush()?;
+        stdout.write_all(result.as_slice())?;
+        stdout.flush()?;
 
         Ok(())
     }
@@ -182,7 +182,6 @@ impl Ssh {
         let map_name_u16 = U16CString::from_str(map_name)?;
         let map_name_u16 = PCWSTR(map_name_u16.as_ptr() as *mut u16);
 
-        log::info!("creating file map");
         let file_mapping;
         unsafe {
             file_mapping = CreateFileMappingW(
@@ -192,9 +191,8 @@ impl Ssh {
                 0,
                 AGENT_MAX_LENGTH,
                 map_name_u16,
-            );
+            )?;
         }
-        log::info!("created file map");
 
         Ok(file_mapping)
     }
@@ -206,4 +204,78 @@ struct CopyDataStruct {
     dw_data: isize,   // type of data
     cb_data: c_ulong, // length of data
     lp_data: isize,   // the data
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use windows::Win32::System::Threading::CreateMutexW;
+
+    #[test]
+    fn test_create_file_mapping() {
+        let ssh = Ssh {};
+        let map_name = format!("WSLPageantRequest-create-file-mapping{}", process::id());
+        let mapping = ssh.create_file_mapping(map_name.as_str()).unwrap();
+        assert_ne!(0, mapping.0);
+        unsafe {
+            CloseHandle(mapping);
+        }
+
+        // you cannot create a file mapping if its name is already taken by a mutex
+        // let's create one
+        let map_name_c_string = U16CString::from_str(map_name.clone()).unwrap();
+        let map_name_c_string = PCWSTR(map_name_c_string.as_ptr() as *mut u16);
+        let mutex: HANDLE;
+        unsafe {
+            mutex = CreateMutexW(
+                std::ptr::null::<SECURITY_ATTRIBUTES>(),
+                true,
+                map_name_c_string,
+            )
+            .unwrap();
+        }
+        assert_ne!(0, mutex.0);
+
+        // now the create file mapping should fail
+        let mapping = ssh.create_file_mapping(map_name.as_str());
+        assert!(mapping.is_err());
+
+        unsafe {
+            CloseHandle(mutex);
+        }
+    }
+
+    #[test]
+    fn test_send_result() {
+        let ssh = Ssh {};
+        let mut stdout = Vec::new();
+        let length = 6_u32.to_be_bytes();
+        let mut data = [
+            length[0], length[1], length[2], length[3], 0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8,
+        ];
+
+        ssh.send_result(&mut stdout, &mut data).unwrap();
+        assert_eq!(10, stdout.len()); // length of 6 + 4 for u32.to_be_bytes
+        for n in 0..10 {
+            assert_eq!(&data[n], stdout.get(n).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_map_file_of_view() {
+        let ssh = Ssh {};
+        let map_name = format!("WSLPageantRequest-test-map-file-of-view{}", process::id());
+        let mapping = ssh.create_file_mapping(map_name.as_str()).unwrap();
+        let data = vec![0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8];
+        let (shared_memory, shared_slice) = ssh.map_file_of_view(mapping, data.clone()).unwrap();
+
+        for n in 0..8 {
+            assert_eq!(data.get(n).unwrap(), shared_slice.get(n).unwrap());
+        }
+
+        unsafe {
+            CloseHandle(mapping);
+            UnmapViewOfFile(shared_memory);
+        }
+    }
 }
