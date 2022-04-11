@@ -6,7 +6,7 @@ mod ssh;
 
 use crate::gpg::Gpg;
 use crate::licenses::Licenses;
-use crate::ssh::Ssh;
+use crate::ssh::SshPageantClient;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use flexi_logger::{FileSpec, Logger, WriteMode};
@@ -26,6 +26,17 @@ enum SubCommand {
     Gpg(Gpg),
     Ssh(Ssh),
     Licenses(Licenses),
+}
+
+#[derive(Parser)]
+pub struct Ssh {}
+
+impl Ssh {
+    pub fn run(&self) -> Result<()> {
+        log::info!("start");
+
+        SshPageantClient::run()
+    }
 }
 
 fn main() -> Result<()> {
