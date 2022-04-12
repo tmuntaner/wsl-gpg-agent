@@ -82,7 +82,7 @@ impl PageantWindow {
 mod test {
     use super::*;
     use crate::ssh::file_mapping::FileMapping;
-    use crate::ssh::test::Window;
+    use crate::ssh::test::{window_input, Window};
     use std::process;
 
     #[test]
@@ -94,23 +94,32 @@ mod test {
 
     #[test]
     fn test_send_message() {
-        let window = Window::new();
-
+        // generate the shared memory
         let map_name = format!("WSLPageantRequest-test-send-message{}", process::id());
         let file_mapping = FileMapping::new(&map_name).unwrap();
+        let shared_slice = file_mapping.shared_memory();
 
-        let mut shared_memory = file_mapping.shared_memory().unwrap();
-        let shared_slice = shared_memory.shared_memory();
-
-        for i in 0..8 {
-            shared_slice[i as usize] = i as u8;
+        // set our shared memory to the expected data
+        let (length_bytes, data) = window_input();
+        for (k, v) in data.to_vec().iter().enumerate() {
+            shared_slice[k] = *v;
         }
 
+        // send the request to the pageant window
+        let window = Window::new();
         let pageant_window =
             PageantWindow::new(&window.window_name(), &window.class_name()).unwrap();
         pageant_window.send_message(&map_name).unwrap();
-        for i in 0..9 {
-            assert_eq!(8u8, shared_slice[i as usize]);
+
+        // verify the data
+        // the first 4 bytes are the length
+        // the last 8 bytes are 8u8
+        for i in 0..12 {
+            if i < 4 {
+                assert_eq!(length_bytes[i], shared_slice[i]);
+            } else {
+                assert_eq!(8u8, shared_slice[i]);
+            }
         }
     }
 }
