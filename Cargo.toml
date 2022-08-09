@@ -10,7 +10,7 @@ license = "MPL-2.0"
 tokio = { version = "1", features = ["rt", "io-std", "io-util", "net", "macros", "rt-multi-thread"] }
 tokio-util = { version = "0.7.3", features = ["codec"] }
 futures = "0.3.21"
-anyhow = "1.0.59"
+anyhow = "1.0.60"
 dirs = "4.0.0"
 clap = { version = "3.2.2", features = ["derive"] }
 flexi_logger = { version = "0.23", features = [] }
