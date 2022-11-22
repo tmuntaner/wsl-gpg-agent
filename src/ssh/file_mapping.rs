@@ -5,7 +5,6 @@ use std::slice;
 use widestring::U16CString;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
-use windows::Win32::Security::SECURITY_ATTRIBUTES;
 use windows::Win32::System::Memory::{
     CreateFileMappingW, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS, PAGE_EXECUTE_READWRITE,
 };
@@ -24,7 +23,7 @@ impl FileMapping {
         unsafe {
             file_mapping = CreateFileMappingW(
                 INVALID_HANDLE_VALUE,
-                std::ptr::null::<SECURITY_ATTRIBUTES>(),
+                None,
                 PAGE_EXECUTE_READWRITE,
                 0,
                 AGENT_MAX_LENGTH,
@@ -88,12 +87,7 @@ mod test {
         let map_name_c_string = PCWSTR(map_name_c_string.as_ptr() as *mut u16);
         let mutex: HANDLE;
         unsafe {
-            mutex = CreateMutexW(
-                std::ptr::null::<SECURITY_ATTRIBUTES>(),
-                true,
-                map_name_c_string,
-            )
-            .unwrap();
+            mutex = CreateMutexW(None, true, map_name_c_string).unwrap();
         }
         assert_ne!(0, mutex.0);
 
