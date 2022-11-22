@@ -11,3 +11,9 @@ updates:
       interval: "daily"
     reviewers:
       - "tmuntaner"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    reviewers:
+      - "tmuntaner"
