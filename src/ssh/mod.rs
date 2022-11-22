@@ -116,7 +116,7 @@ mod test {
     use rand::Rng;
     use std::ffi::CStr;
     use std::os::raw::c_char;
-    use std::{process, ptr};
+    use std::process;
     use widestring::U16CString;
     use windows::core::PCWSTR;
     use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
@@ -231,9 +231,9 @@ mod test {
 
             let h_instance;
             unsafe {
-                h_instance = GetModuleHandleW(PCWSTR::default());
+                h_instance = GetModuleHandleW(PCWSTR::null()).unwrap();
             }
-            assert_ne!(0, h_instance.0);
+            assert!(!h_instance.is_invalid());
 
             let lpwndclass = WNDCLASSW {
                 style: WNDCLASS_STYLES::default(),
@@ -244,7 +244,7 @@ mod test {
                 hIcon: HICON::default(),
                 hCursor: HCURSOR::default(),
                 hbrBackground: Default::default(),
-                lpszMenuName: PCWSTR::default(),
+                lpszMenuName: PCWSTR::null(),
                 lpszClassName: PCWSTR(class_name.as_ptr() as *mut u16),
             };
 
@@ -267,7 +267,7 @@ mod test {
                     HWND::default(),
                     HMENU::default(),
                     h_instance,
-                    ptr::null(),
+                    None,
                 );
             }
             assert_ne!(0, hwnd.0);
