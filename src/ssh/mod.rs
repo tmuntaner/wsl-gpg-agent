@@ -163,7 +163,7 @@ mod test {
         assert_eq!(12, result.len() as u32);
 
         // make sure the read data is the same as the request
-        for i in 0..12 as usize {
+        for i in 0..12_usize {
             assert_eq!(data.get(i).unwrap(), result.get(i).unwrap());
         }
     }
@@ -179,8 +179,8 @@ mod test {
 
         ssh.send_result(&mut stdout, &mut data).unwrap();
         assert_eq!(10, stdout.len()); // length of 6 + 4 for u32.to_be_bytes
-        for n in 0..10 {
-            assert_eq!(&data[n], stdout.get(n).unwrap());
+        for (n, item) in data.iter().enumerate().take(10) {
+            assert_eq!(item, stdout.get(n).unwrap());
         }
     }
 
@@ -317,7 +317,7 @@ mod test {
                         .to_str()
                         .unwrap();
                 }
-                let file_mapping = FileMapping::new(&map_name).unwrap();
+                let file_mapping = FileMapping::new(map_name).unwrap();
                 let shared_memory_slice = file_mapping.shared_memory();
 
                 let length_buffer: [u8; 4] = [
@@ -335,6 +335,7 @@ mod test {
                 }
 
                 // zero out the data
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..AGENT_MAX_LENGTH as usize {
                     shared_memory_slice[i] = 0u8;
                 }
@@ -342,7 +343,7 @@ mod test {
                 // return 12 bytes
                 // first 4 bytes are 8 as a u32
                 // the rest of the bytes are 8u8
-                let length_bytes = (8 as u32).to_be_bytes();
+                let length_bytes = 8_u32.to_be_bytes();
                 for i in 0..12 {
                     if i < 4 {
                         shared_memory_slice[i] = length_bytes[i];

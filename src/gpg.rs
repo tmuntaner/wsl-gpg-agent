@@ -25,7 +25,7 @@ impl Gpg {
         let runtime = tokio::runtime::Runtime::new()?;
 
         let _ = runtime.block_on(async {
-            let addr = format!("localhost:{}", port);
+            let addr = format!("localhost:{port}");
             let socket = TcpStream::connect(addr).await?;
             let (rd, mut wr) = io::split(socket);
 
@@ -50,7 +50,7 @@ impl Gpg {
                         //BytesMut into Bytes
                         Ok(i) => future::ready(Some(i.freeze())),
                         Err(e) => {
-                            println!("failed to read from socket; error={}", e);
+                            println!("failed to read from socket; error={e}");
                             future::ready(None)
                         }
                     })
