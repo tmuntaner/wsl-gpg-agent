@@ -11,7 +11,7 @@ tokio = { version = "1", features = ["rt", "io-std", "io-util", "net", "macros",
 tokio-util = { version = "0.7.8", features = ["codec"] }
 futures = "0.3.28"
 anyhow = "1.0.71"
-dirs = "5.0.0"
+dirs = "5.0.1"
 clap = { version = "4.2.6", features = ["derive"] }
 flexi_logger = { version = "0.25", features = [] }
 log = "0.4"
