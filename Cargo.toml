@@ -13,7 +13,7 @@ futures = "0.3.28"
 anyhow = "1.0.75"
 dirs = "5.0.1"
 clap = { version = "4.4.0", features = ["derive"] }
-flexi_logger = { version = "0.25", features = [] }
+flexi_logger = { version = "0.26", features = [] }
 log = "0.4"
 widestring = "1.0"
 
