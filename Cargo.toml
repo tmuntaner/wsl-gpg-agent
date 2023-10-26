@@ -9,7 +9,7 @@ license = "MPL-2.0"
 [dependencies]
 tokio = { version = "1", features = ["rt", "io-std", "io-util", "net", "macros", "rt-multi-thread"] }
 tokio-util = { version = "0.7.9", features = ["codec"] }
-futures = "0.3.28"
+futures = "0.3.29"
 anyhow = "1.0.75"
 dirs = "5.0.1"
 clap = { version = "4.4.6", features = ["derive"] }
