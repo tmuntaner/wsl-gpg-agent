@@ -12,7 +12,7 @@ tokio-util = { version = "0.7.9", features = ["codec"] }
 futures = "0.3.29"
 anyhow = "1.0.75"
 dirs = "5.0.1"
-clap = { version = "4.4.9", features = ["derive"] }
+clap = { version = "4.4.10", features = ["derive"] }
 flexi_logger = { version = "0.27", features = [] }
 log = "0.4"
 widestring = "1.0"
