@@ -61,7 +61,7 @@ fn main() -> Result<()> {
     let _logger = Logger::try_with_str("info")?
         .log_to_file(FileSpec::default().suppress_timestamp().directory(path))
         .write_mode(WriteMode::BufferAndFlush)
-        .start()?;
+        .start();
     let opt: Opts = Opts::parse();
 
     match opt.sub_command {

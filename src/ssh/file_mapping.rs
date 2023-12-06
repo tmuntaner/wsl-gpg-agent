@@ -6,7 +6,8 @@ use widestring::U16CString;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
 use windows::Win32::System::Memory::{
-    CreateFileMappingW, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS, PAGE_EXECUTE_READWRITE,
+    CreateFileMappingW, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS,
+    MEMORY_MAPPED_VIEW_ADDRESS, PAGE_EXECUTE_READWRITE,
 };
 
 pub struct FileMapping {
@@ -36,16 +37,16 @@ impl FileMapping {
             shared_memory = MapViewOfFile(file_mapping, FILE_MAP_ALL_ACCESS, 0u32, 0u32, 0_usize);
         }
 
-        if shared_memory.is_null() {
+        if shared_memory.Value.is_null() {
             unsafe {
-                CloseHandle(file_mapping);
+                _ = CloseHandle(file_mapping);
             }
             bail!("failed MapViewOfFile");
         }
 
         Ok(Self {
             handle: file_mapping,
-            shared_memory,
+            shared_memory: shared_memory.Value,
         })
     }
 
@@ -60,8 +61,10 @@ impl FileMapping {
 impl Drop for FileMapping {
     fn drop(&mut self) {
         unsafe {
-            UnmapViewOfFile(self.shared_memory);
-            CloseHandle(self.handle);
+            _ = UnmapViewOfFile(MEMORY_MAPPED_VIEW_ADDRESS {
+                Value: self.shared_memory,
+            });
+            _ = CloseHandle(self.handle);
         }
     }
 }
@@ -96,7 +99,7 @@ mod test {
         assert!(file_mapping.is_err());
 
         unsafe {
-            CloseHandle(mutex);
+            _ = CloseHandle(mutex);
         }
     }
 
