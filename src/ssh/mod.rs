@@ -240,7 +240,7 @@ mod test {
                 lpfnWndProc: Some(wnd_proc),
                 cbClsExtra: 0,
                 cbWndExtra: 0,
-                hInstance: h_instance,
+                hInstance: h_instance.into(),
                 hIcon: HICON::default(),
                 hCursor: HCURSOR::default(),
                 hbrBackground: Default::default(),
@@ -275,7 +275,7 @@ mod test {
             Self {
                 window_name,
                 class_name,
-                h_instance,
+                h_instance: h_instance.into(),
                 hwnd,
             }
         }
@@ -292,11 +292,11 @@ mod test {
     impl Drop for Window {
         fn drop(&mut self) {
             unsafe {
-                UnregisterClassW(
+                _ = UnregisterClassW(
                     PCWSTR(self.class_name.as_ptr() as *mut u16),
                     self.h_instance,
                 );
-                DestroyWindow(self.hwnd);
+                _ = DestroyWindow(self.hwnd);
             }
         }
     }
