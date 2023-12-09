@@ -15,9 +15,9 @@ Please follow the following guide from Yubico to install and configure GPG: http
 #### wsl-gpg-agent binary
 
 ```bash
-mkdir -p $HOME/bin # make the bin directory if it doesn't already exist
-wget -O "$HOME/bin/wsl-gpg-agent.exe" "https://github.com/tmuntaner/wsl-gpg-agent/releases/latest/download/wsl-gpg-agent.exe"
-chmod +x "$HOME/bin/wsl-gpg-agent.exe"
+mkdir -p $HOME/.local/bin # make the .local/bin directory if it doesn't already exist
+wget -O "$HOME/.local/bin/wsl-gpg-agent.exe" "https://github.com/tmuntaner/wsl-gpg-agent/releases/latest/download/wsl-gpg-agent.exe"
+chmod +x "$HOME/.local/bin/wsl-gpg-agent.exe"
 ```
 
 #### Dependencies
@@ -35,11 +35,12 @@ sudo zypper in socat iproute2
 Please add the following to your shell configuration file (`~/.zshrc`, `~/.bashrc`) to set up your GPG and SSH sockets.
 
 ##### Bash/ZSH
+
 ```bash
 export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
 if ! ss -a | grep -q "$SSH_AUTH_SOCK"; then
   rm -f "$SSH_AUTH_SOCK"
-  wsl_gpg_agent_bin="$HOME/bin/wsl-gpg-agent.exe"
+  wsl_gpg_agent_bin="$HOME/.local/bin/wsl-gpg-agent.exe"
   if test -x "$wsl_gpg_agent_bin"; then
     (setsid nohup socat UNIX-LISTEN:"$SSH_AUTH_SOCK,fork" EXEC:"$wsl_gpg_agent_bin ssh" > /dev/null 2>&1 &)
   else
@@ -51,7 +52,7 @@ fi
 export GPG_AGENT_SOCK="$HOME/.gnupg/S.gpg-agent"
 if ! ss -a | grep -q "$GPG_AGENT_SOCK"; then
   rm -rf "$GPG_AGENT_SOCK"
-  wsl_gpg_agent_bin="$HOME/bin/wsl-gpg-agent.exe"
+  wsl_gpg_agent_bin="$HOME/.local/bin/wsl-gpg-agent.exe"
   if test -x "$wsl_gpg_agent_bin"; then
     (setsid nohup socat UNIX-LISTEN:"$GPG_AGENT_SOCK,fork" EXEC:"$wsl_gpg_agent_bin gpg" > /dev/null 2>&1 &)
   else
