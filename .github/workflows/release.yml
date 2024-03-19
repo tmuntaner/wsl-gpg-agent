@@ -32,7 +32,7 @@ jobs:
           "$sum wsl-gpg-agent.exe" | Out-File .\wsl-gpg-agent.exe.SHA256SUM
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             target/release/wsl-gpg-agent.exe
